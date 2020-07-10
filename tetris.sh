@@ -10,6 +10,9 @@ COLOR_BACKGROUND=0 # чёрный
 COLOR_BORDER=7 # белый
 COLOR_BLOCK=1 # красный
 
+COLOR_TEXT_BACKGROUND=0
+COLOR_TEXT_FOREGROUND=7
+
 UPDATE_DELAY=0.4 # время между кадрами
 BORDER_CHAR='|'
 BLOCK_CHAR='*'
@@ -81,7 +84,11 @@ function setColor()
 
 function setTextColor()
 {
-  tput init # устанавливает стандартный цвет
+  if [ "$USE_COLORS" = "1" ]
+  then
+    setForeground $COLOR_TEXT_FOREGROUND
+    setBackground $COLOR_TEXT_BACKGROUND
+  fi
 }
 
 ######--------------------------------#####
@@ -260,7 +267,14 @@ function printBordersAndFillCollisionMatrix()
   setColor $COLOR_BACKGROUND
   for ((i = 0; i<$GAME_FIELD_HEIGHT; i++))
   do
-	printf '%*s\n' "$(($GAME_FIELD_WIDTH + 1))" | tr ' ' "$BLOCK_EMPTY_CHAR"
+    local j localEmptyLine
+    localEmptyLine=""
+    for ((j=0; j<=$GAME_FIELD_WIDTH; j++))
+    do
+      printf " "
+    #  localEmptyLine="$localEmptyLine"+"$BLOCK_EMPTY_CHAR"
+    done
+    echo $localEmptyLine
   done
 
   # отрисовываем левую и правую границу и вставляем их в матрицу коллизий
@@ -449,7 +463,6 @@ function showSpalshScreen()
 
   echo ""
   echo ""
-  echo "         Lab 1"
   echo "  Made by Bilenko Yehor"
   echo "       PZPI-18-4"
   echo ""
@@ -458,9 +471,10 @@ function showSpalshScreen()
   echo "  A - move left"
   echo "  D - move right"
   echo "  R - rotate"
-  echo "  Q - quit"
+  echo "  Q - quit game"
   echo ""
-  echo " USE ONLY ENGLISH KEYS!"
+  echo ""
+  echo " Remember to use only English keys!"
   echo ""
   echo "    Press any key..."
 
@@ -603,13 +617,16 @@ function gameOver()
 {
   trap exit ALRM
 
-  tput init # возвращает цвет
+  setBackground $COLOR_TEXT_BACKGROUND
+  setForeground $COLOR_TEXT_FOREGROUND
+
   tput cup 6 $(($GAME_FIELD_WIDTH + $TEXT_OFFSET_X))
   echo "GAME OVER!"
+
   tput cup $(($GAME_FIELD_HEIGHT + 1)) 0
   tput cvvis # показывает курсор
   stty echo # перестаёт прятать то, что выводится в консоль при вводе
-  tput init # возвращает цвет
+  tput init
 }
 
 function runGame()
